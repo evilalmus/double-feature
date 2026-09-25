@@ -4,5 +4,5 @@ window.DOUBLE_FEATURE_CONFIG = {
   // Example: "https://double-feature-api.example.com"
   apiBase: "https://double-feature-api.g33k.bar",
   // true = clearly labeled offline sample; false = live TMDB + OpenAI service.
-  demo: true
+  demo: false
 };
