@@ -9,7 +9,7 @@ export function normalizeInput(body){
  if(movieIds.length>1&&type!=='choose')throw new PublicError(400,'Multiple movies can only use “You choose”.');
  return {movieIds:[...movieIds].sort((a,b)=>a-b),type};
 }
-export function cacheKey(input,model){return JSON.stringify(['v1',model,input.type,input.movieIds]);}
+export function cacheKey(input,model){return JSON.stringify(['v2',model,input.type,input.movieIds]);}
 const intersects=(a,b,key)=>a[key].some(p=>b[key].some(q=>p.id===q.id));
 export function factualMatch(a,b,type){
  if(type==='actor')return intersects(a,b,'cast');
@@ -17,7 +17,16 @@ export function factualMatch(a,b,type){
  if(type==='era')return a.year&&b.year&&Math.floor(a.year/10)===Math.floor(b.year/10);
  return true;
 }
-export function publicMovie(m){return {id:m.id,title:m.title,year:m.year,runtime:m.runtime||null,poster:m.poster||null};}
+export function publicMovie(m){
+ return {
+  id:m.id,
+  title:m.title,
+  year:m.year,
+  runtime:m.runtime||null,
+  poster:m.poster||null,
+  tmdbScore:m.tmdbScore??null
+ };
+}
 export function modelSchema(ids){
  const text={type:'string'};
  return {type:'object',additionalProperties:false,required:['pairings'],properties:{pairings:{type:'array',minItems:1,maxItems:5,items:{type:'object',additionalProperties:false,required:['movieIds','label','title','reason','blurb','order'],properties:{movieIds:{type:'array',minItems:2,maxItems:2,items:{type:'integer',enum:ids}},label:{type:'string',enum:['Actor','Director','Theme','Mood','Era','Style','Contrast']},title:text,reason:text,blurb:text,order:text}}}}};

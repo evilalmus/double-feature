@@ -9,8 +9,20 @@ export class MovieService {
   const request=(async()=>{let response;try{response=await this.fetcher(url,{headers:{Authorization:`Bearer ${this.token}`,Accept:'application/json'},signal:AbortSignal.timeout(12000)});}catch{throw new PublicError(503,'Movie search is temporarily unavailable. Please try again.');}
   if(response.status===404)throw new PublicError(400,'A selected movie could not be found. Please select it again.');if(!response.ok)throw new PublicError(503,'The movie catalog is unavailable. Please try again later.');const json=await response.json();this.store.set(key,json,DAY);return json;})();this.pending.set(key,request);try{return await request;}finally{this.pending.delete(key);}
  }
- summary(m){return {id:m.id,title:m.title,year:m.release_date?Number(m.release_date.slice(0,4)):null,runtime:m.runtime||null,poster:typeof m.poster_path==='string'&&/^\/[A-Za-z0-9._-]+$/.test(m.poster_path)?`https://image.tmdb.org/t/p/w342${m.poster_path}`:null};}
- async search(q){const data=await this.get('/search/movie',{query:q,include_adult:false,page:1});return (data.results||[]).filter(m=>!m.adult&&m.title).slice(0,8).map(m=>this.summary(m));}
+ summary(m){
+  return {
+   id:m.id,
+   title:m.title,
+   year:m.release_date?Number(m.release_date.slice(0,4)):null,
+   runtime:m.runtime||null,
+   poster:typeof m.poster_path==='string'&&/^\/[A-Za-z0-9._-]+$/.test(m.poster_path)
+    ?`https://image.tmdb.org/t/p/w342${m.poster_path}`
+    :null,
+   tmdbScore:typeof m.vote_average==='number'&&Number.isFinite(m.vote_average)
+    ?Math.round(m.vote_average*10)/10
+    :null
+  };
+ } async search(q){const data=await this.get('/search/movie',{query:q,include_adult:false,page:1});return (data.results||[]).filter(m=>!m.adult&&m.title).slice(0,8).map(m=>this.summary(m));}
  async detail(id){const m=await this.get(`/movie/${id}`,{append_to_response:'credits,keywords'});if(m.adult||!m.title)throw new PublicError(400,'This movie is not available in the catalog.');return {...this.summary(m),overview:String(m.overview||'').slice(0,1100),genres:(m.genres||[]).map(g=>g.name),cast:(m.credits?.cast||[]).slice(0,12).map(p=>({id:p.id,name:p.name})),directors:(m.credits?.crew||[]).filter(p=>p.job==='Director').map(p=>({id:p.id,name:p.name})),keywordIds:(m.keywords?.keywords||[]).slice(0,4).map(k=>k.id),genreIds:(m.genres||[]).map(g=>g.id)};}
  async candidates(anchor,type){
   let raw=[];

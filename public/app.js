@@ -56,7 +56,61 @@ function renderResults(data){
  $('result-cards').replaceChildren();const pairings=data.pairings||[];
  $('results-summary').textContent=pairings.length?(selected.length>1?`The strongest connections from your ${selected.length} selected films.`:`An evening built around ${selected[0].title}.`):'No verified matches for this connection. Try “You choose” or a different movie.';
  $('results-kicker').textContent=data.demo?'SAMPLE PAIRINGS · OFFLINE DEMO':'YOUR NEXT MOVIE NIGHT';$('result-count').textContent=`${pairings.length} ${pairings.length===1?'pairing':'pairings'}`;
- pairings.forEach((pair,i)=>{const card=node('article','pair-card'),films=node('div','pair-films');pair.movies.forEach(m=>{const film=node('div','pair-film');film.append(filmArt(m),node('h3','',m.title),node('p','',[m.year,m.runtime?`${m.runtime} min`:null].filter(Boolean).join(' · ')));films.append(film);});const bridge=node('span','pair-bridge','+');bridge.setAttribute('aria-hidden','true');films.append(bridge);const copy=node('div','pair-copy'),total=pair.movies.reduce((sum,m)=>sum+(m.runtime||0),0);copy.append(node('p','eyebrow',`${String(i+1).padStart(2,'0')} / ${pair.label.toUpperCase()}${pair.movies.every(m=>m.runtime)?` / ${Math.floor(total/60)}H ${total%60}M`:''}`),node('h3','',pair.title),node('p','blurb',pair.blurb),node('span','why-label','WHY THEY WORK TOGETHER'),node('p','reason',pair.reason),node('p','watch-order',pair.order));card.append(films,copy);$('result-cards').append(card);});
+ pairings.forEach((pair,i)=>{const card=node('article','pair-card'),films=node('div','pair-films');pair.movies.forEach(m=>{
+ const film=node('div','pair-film');
+
+ const title=node('h3');
+ const titleLink=node('a','movie-title-link',m.title);
+
+ titleLink.href=`https://www.themoviedb.org/movie/${m.id}`;
+ titleLink.target='_blank';
+ titleLink.rel='noopener noreferrer';
+ titleLink.setAttribute(
+  'aria-label',
+  `${m.title} on The Movie Database (opens in a new tab)`
+ );
+
+ title.append(titleLink);
+
+ const metadata=node('p','movie-meta');
+
+ const details=[
+  m.year,
+  m.runtime?`${m.runtime} min`:null
+ ].filter(Boolean);
+
+ if(details.length){
+  metadata.append(
+   document.createTextNode(details.join(' · '))
+  );
+ }
+
+ if(m.tmdbScore!==null&&m.tmdbScore!==undefined){
+  if(details.length){
+   metadata.append(
+    document.createTextNode(' · ')
+   );
+  }
+
+  const rating=node(
+   'span',
+   'tmdb-score',
+   `TMDB ${Number(m.tmdbScore).toFixed(1)}/10`
+  );
+
+  rating.title='TMDB user score';
+
+  metadata.append(rating);
+ }
+
+ film.append(
+  filmArt(m),
+  title,
+  metadata
+ );
+
+ films.append(film);
+});;const bridge=node('span','pair-bridge','+');bridge.setAttribute('aria-hidden','true');films.append(bridge);const copy=node('div','pair-copy'),total=pair.movies.reduce((sum,m)=>sum+(m.runtime||0),0);copy.append(node('p','eyebrow',`${String(i+1).padStart(2,'0')} / ${pair.label.toUpperCase()}${pair.movies.every(m=>m.runtime)?` / ${Math.floor(total/60)}H ${total%60}M`:''}`),node('h3','',pair.title),node('p','blurb',pair.blurb),node('span','why-label','WHY THEY WORK TOGETHER'),node('p','reason',pair.reason),node('p','watch-order',pair.order));card.append(films,copy);$('result-cards').append(card);});
  $('results').hidden=false;$('results-title').focus({preventScroll:true});$('results').scrollIntoView({behavior:'smooth',block:'start'});announce(`${pairings.length} double feature pairings ready.`);
 }
 async function generate(){

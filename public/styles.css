@@ -30,3 +30,30 @@
     align-items: flex-start;
   }
 }
+.movie-title-link {
+  color: var(--text);
+  text-decoration: none;
+  transition: color .18s;
+}
+
+.movie-title-link:hover {
+  color: var(--lime);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.movie-title-link:focus-visible {
+  color: var(--lime);
+}
+
+.movie-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
+}
+
+.tmdb-score {
+  color: var(--lime);
+  font-weight: 600;
+}
