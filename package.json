@@ -1,0 +1,6 @@
+{
+  "name": "double-feature", "version": "1.0.0", "private": true, "type": "module",
+  "description": "A GitHub Pages movie pairing app with a private, one-call OpenAI companion API.",
+  "engines": { "node": ">=22" },
+  "scripts": { "start": "node --env-file-if-exists=.env server/index.mjs", "dev": "node --env-file-if-exists=.env server/index.mjs", "test": "node --test test/*.test.mjs", "check": "node --check public/app.js && node --check server/index.mjs && node --check server/pairings.mjs" }
+}

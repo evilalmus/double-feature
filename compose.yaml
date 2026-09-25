@@ -1,0 +1,14 @@
+services:
+  double-feature-api:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PORT: 4173
+      DATA_DIR: /app/.data
+    ports:
+      - "127.0.0.1:4173:4173"
+    volumes:
+      - pairing-data:/app/.data
+volumes:
+  pairing-data:
