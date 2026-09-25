@@ -7,6 +7,7 @@ import {Store} from './store.mjs';
 import {MovieService} from './tmdb.mjs';
 import {PairingService} from './service.mjs';
 import {PublicError} from './pairings.mjs';
+import {log} from './log.mjs';
 const root=fileURLToPath(new URL('../public/',import.meta.url));
 const port=Number(process.env.PORT||4173);
 const origins=new Set((process.env.ALLOWED_ORIGINS||'http://localhost:4173,http://127.0.0.1:4173,http://terminal.local:4173').split(',').map(s=>s.trim()).filter(Boolean));
@@ -31,15 +32,49 @@ async function body(req){
  try{return JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{throw new PublicError(400,'The request could not be read.');}
 }
 const server=http.createServer(async(req,res)=>{
- res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('X-Frame-Options','DENY');
+ let requestPath='unknown';
+
+ res.setHeader('X-Content-Type-Options','nosniff');
+ res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');
+ res.setHeader('X-Frame-Options','DENY');
+
  try{
- const url=new URL(req.url,'http://local.invalid');
+  const url=new URL(req.url,'http://local.invalid');
+  requestPath=url.pathname;
+//const server=http.createServer(async(req,res)=>{
+// res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('X-Frame-Options','DENY');
+// try{
+// const url=new URL(req.url,'http://local.invalid');
  if(url.pathname.startsWith('/api/')){
   const origin=req.headers.origin;
   if(origin&&!origins.has(origin))throw new PublicError(403,'This website is not allowed to use the movie service.');
   if(origin){res.setHeader('Access-Control-Allow-Origin',origin);res.setHeader('Vary','Origin');}
   if(req.method==='OPTIONS'){res.setHeader('Access-Control-Allow-Methods','GET, POST, OPTIONS');res.setHeader('Access-Control-Allow-Headers','Content-Type');res.setHeader('Access-Control-Max-Age','600');res.writeHead(204);res.end();return;}
-  if(req.method==='GET'&&url.pathname==='/api/health'){json(res,200,{ready:!!(process.env.OPENAI_API_KEY&&process.env.TMDB_READ_TOKEN)});return;}
+  if(req.method==='GET'&&url.pathname==='/api/search'){
+    const started=Date.now();
+  
+    rate(req,'search',60,60000);
+  
+    const q=String(url.searchParams.get('q')||'').trim();
+  
+    if(q.length<2||q.length>100||/[\u0000-\u001f\u007f]/.test(q))
+      throw new PublicError(
+        400,
+        'Enter a movie title between 2 and 100 characters.'
+      );
+  
+    const movies=await movieService.search(q);
+  
+    log('SEARCH',{
+      status:200,
+      results:movies.length,
+      durationMs:Date.now()-started
+    });
+  
+    json(res,200,{movies});
+    return;
+  }
+  //  if(req.method==='GET'&&url.pathname==='/api/health'){json(res,200,{ready:!!(process.env.OPENAI_API_KEY&&process.env.TMDB_READ_TOKEN)});return;}
   if(!process.env.TMDB_READ_TOKEN)throw new PublicError(503,'Movie search is not configured yet. Please contact the site owner.');
   if(req.method==='GET'&&url.pathname==='/api/search'){
    rate(req,'search',60,60000);const q=String(url.searchParams.get('q')||'').trim();if(q.length<2||q.length>100||/[\u0000-\u001f\u007f]/.test(q))throw new PublicError(400,'Enter a movie title between 2 and 100 characters.');json(res,200,{movies:await movieService.search(q)});return;
@@ -56,7 +91,31 @@ const server=http.createServer(async(req,res)=>{
  let info;try{info=await stat(file);}catch{throw new PublicError(404,'Page not found.');}if(!info.isFile())throw new PublicError(404,'Page not found.');
  const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.png':'image/png','.jpg':'image/jpeg','.svg':'image/svg+xml'};
  res.setHeader('Content-Type',mime[extname(file)]||'application/octet-stream');res.setHeader('Cache-Control','no-cache');res.writeHead(200);res.end(req.method==='HEAD'?undefined:await readFile(file));
- }catch(e){if(res.headersSent){res.end();return;}json(res,e.status||500,{error:e instanceof PublicError?e.message:'The movie service encountered a problem. Please try again.'});if(!(e instanceof PublicError))console.error('Request failed:',e.name);}
+ }catch(e){
+   const status=e.status||500;
+ 
+   log('REQUEST_ERROR',{
+     status,
+     path:requestPath,
+     error:e.name
+   });
+ 
+   if(res.headersSent){
+     res.end();
+     return;
+   }
+ 
+   json(
+     res,
+     status,
+     {
+       error:e instanceof PublicError
+         ? e.message
+         : 'The movie service encountered a problem. Please try again.'
+     }
+   );
+ }
+ // }catch(e){if(res.headersSent){res.end();return;}json(res,e.status||500,{error:e instanceof PublicError?e.message:'The movie service encountered a problem. Please try again.'});if(!(e instanceof PublicError))console.error('Request failed:',e.name);}
 });
 server.requestTimeout=100000;server.headersTimeout=15000;
 server.listen(port,'0.0.0.0',()=>console.log(`Double Feature listening on port ${server.address().port}. ${process.env.OPENAI_API_KEY&&process.env.TMDB_READ_TOKEN?'API configured.':'Offline demo available; live API keys not configured.'}`));
