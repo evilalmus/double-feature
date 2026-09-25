@@ -49,7 +49,58 @@
       </div>
       <section id="results" class="results" aria-labelledby="results-title" hidden><div class="results-header"><div><p class="eyebrow" id="results-kicker">YOUR NEXT MOVIE NIGHT</p><h2 id="results-title" tabindex="-1">Double Feature Movie Pairings</h2><p id="results-summary"></p></div><span id="result-count" class="count-pill"></span></div><div id="result-cards"></div><p class="result-note">Connections are suggestions, not guarantees. Check age ratings before choosing your movie night.</p></section>
     </main>
-    <footer><span class="footer-brand">DOUBLE FEATURE<span>.</span></span><span id="mode-note"></span><details class="credits"><summary>Credits & privacy</summary><div><a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer"><img class="tmdb-logo" src="./assets/tmdb.svg" alt="The Movie Database (TMDB)" width="100" height="14"></a><p>In live mode, movie metadata and posters come from <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer">TMDB</a>. This product uses the TMDB API but is not endorsed or certified by TMDB.</p><p>Selected movie metadata is sent to OpenAI to generate pairings. No account is required. The server temporarily counts requests to limit abuse and stores shared pairing results. Posters belong to their respective rights holders.</p><p>The offline demo uses a small sample catalog and locally written pairings. It does not call OpenAI.</p></div></details></footer>
+    <footer>
+    <span class="footer-brand">
+      DOUBLE FEATURE<span>.</span>
+    </span>
+  
+    <div class="footer-attribution">
+      <a
+        href="https://www.themoviedb.org/"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="The Movie Database"
+      >
+        <img
+          class="tmdb-logo"
+          src="./assets/tmdb.svg"
+          alt="The Movie Database (TMDB)"
+          width="100"
+          height="14"
+        >
+      </a>
+  
+      <span>
+        This product uses the TMDB API but is not endorsed or certified by TMDB.
+      </span>
+    </div>
+  
+    <span id="mode-note"></span>
+  
+    <details class="credits">
+      <summary>Credits &amp; privacy</summary>
+      <div>
+        <p>
+          Movie metadata and posters are provided by
+          <a
+            href="https://www.themoviedb.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >TMDB</a>.
+        </p>
+  
+        <p>
+          Selected movie metadata is sent to OpenAI to generate pairings.
+          No account is required. The server temporarily counts requests
+          to limit abuse and stores shared pairing results.
+        </p>
+  
+        <p>
+          Posters belong to their respective rights holders.
+        </p>
+      </div>
+    </details>
+  </footer>
   </div>
   <div id="announce" class="sr-only" role="status" aria-live="polite"></div>
 </body>

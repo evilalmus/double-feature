@@ -4,3 +4,29 @@
 /* Preserve entire theatrical posters in result cards. */
 .film-art{height:260px;max-height:none;aspect-ratio:auto;object-fit:contain;background-color:#171d14}.film-typography{background:linear-gradient(140deg,#414b32,#242c20)}
 @media(max-width:650px){.film-art{height:225px}.film-typography strong{font-size:21px}}
+.footer-attribution {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.4;
+  max-width: 430px;
+}
+
+.footer-attribution .tmdb-logo {
+  width: 90px;
+  height: auto;
+  flex-shrink: 0;
+}
+
+.footer-attribution a {
+  display: block;
+}
+
+@media(max-width:650px) {
+  .footer-attribution {
+    width: 100%;
+    align-items: flex-start;
+  }
+}
