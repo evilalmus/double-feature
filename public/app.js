@@ -2,7 +2,7 @@ import {catalog,demoPairings} from './demo.js';
 const config=window.DOUBLE_FEATURE_CONFIG||{demo:true,apiBase:''};
 const $=id=>document.getElementById(id);
 const types=[['choose','✦','You choose'],['actor','◉','Actor'],['director','▤','Director'],['theme','◇','Theme'],['mood','☾','Mood'],['era','◷','Era'],['style','◈','Style']];
-let selected=[],locked=false,type='choose',suggestions=[],active=-1,searchTimer,searchController,searchVersion=0,busy=false;
+let selected=[],locked=false,type='choose',suggestions=[],active=-1,searchTimer,searchController,searchVersion=0,busy=false,currentShareId=null;
 const responseCache=new Map(),searchCache=new Map();
 const base=String(config.apiBase||'').replace(/\/$/,'');
 function node(tag,className,text){const n=document.createElement(tag);if(className)n.className=className;if(text!==undefined)n.textContent=text;return n;}
@@ -54,8 +54,31 @@ function filmArt(movie){
 }
 function renderResults(data){
  $('result-cards').replaceChildren();const pairings=data.pairings||[];
- $('results-summary').textContent=pairings.length?(selected.length>1?`The strongest connections from your ${selected.length} selected films.`:`An evening built around ${selected[0].title}.`):'No verified matches for this connection. Try “You choose” or a different movie.';
- $('results-kicker').textContent=data.demo?'SAMPLE PAIRINGS · OFFLINE DEMO':'YOUR NEXT MOVIE NIGHT';$('result-count').textContent=`${pairings.length} ${pairings.length===1?'pairing':'pairings'}`;
+ if(data.shared){
+  $('results-summary').textContent=
+   'A shared movie night, preserved exactly as it was created.';
+ }else{
+  $('results-summary').textContent=pairings.length
+   ?(
+     selected.length>1
+      ?`The strongest connections from your ${selected.length} selected films.`
+      :`An evening built around ${selected[0].title}.`
+    )
+   :'No verified matches for this connection. Try “You choose” or a different movie.';
+ }
+ $('results-kicker').textContent=data.shared
+  ?'SHARED MOVIE NIGHT'
+  :data.demo
+   ?'SAMPLE PAIRINGS · OFFLINE DEMO'
+   :'YOUR NEXT MOVIE NIGHT';
+
+ $('result-count').textContent=
+  `${pairings.length} ${pairings.length===1?'pairing':'pairings'}`;
+
+ currentShareId=data.shareId||null;
+
+ $('share-results').hidden=!currentShareId;
+ $('share-results').textContent='Copy permalink';
  pairings.forEach((pair,i)=>{const card=node('article','pair-card'),films=node('div','pair-films');pair.movies.forEach(m=>{
  const film=node('div','pair-film');
 
@@ -121,8 +144,81 @@ async function generate(){
  finally{busy=false;update();}
 }
 $('generate').addEventListener('click',generate);
+$('share-results').addEventListener('click',async()=>{
+ if(!currentShareId)return;
+
+ const url=new URL(window.location.href);
+
+ url.search='';
+ url.hash='';
+
+ url.searchParams.set(
+  'share',
+  currentShareId
+ );
+
+ try{
+  await navigator.clipboard.writeText(
+   url.toString()
+  );
+
+  $('share-results').textContent='Link copied';
+
+  announce(
+   'Permalink copied to clipboard.'
+  );
+
+  setTimeout(()=>{
+   if(currentShareId){
+    $('share-results').textContent='Copy permalink';
+   }
+  },2000);
+ }catch{
+  window.prompt(
+   'Copy this permalink:',
+   url.toString()
+  );
+ }
+});
 $('mode-note').textContent=config.demo?'DEMO · Sample catalog · No API calls':'Movie discovery, thoughtfully paired.';
 update();
+async function loadSharedResults(){
+ const params=new URLSearchParams(
+  window.location.search
+ );
+
+ const shareId=params.get('share');
+
+ if(!shareId){
+  return;
+ }
+
+ if(!/^[A-Za-z0-9_-]{16}$/.test(shareId)){
+  error(
+   'This shared movie night link is not valid.'
+  );
+  return;
+ }
+
+ if(config.demo){
+  error(
+   'Shared movie nights require the live movie service.'
+  );
+  return;
+ }
+
+ try{
+  const result=await api(
+   `/share/${encodeURIComponent(shareId)}`
+  );
+
+  renderResults(result);
+ }catch(e){
+  error(e.message);
+ }
+}
+
+loadSharedResults();
 // Progressive enhancement: expose current movie-night state to supporting agents.
 // Read-only: this tool cannot trigger a paid API request or modify the selection.
 if(document.modelContext?.registerTool){

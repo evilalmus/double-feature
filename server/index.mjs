@@ -244,6 +244,45 @@ const server=http.createServer(async(req,res)=>{
         return;
       }
 
+            const shareMatch=url.pathname.match(
+        /^\/api\/share\/([A-Za-z0-9_-]{16})$/
+      );
+
+      if(
+        req.method==='GET'&&
+        shareMatch
+      ){
+        rate(
+          req,
+          'share',
+          120,
+          60000
+        );
+
+        const shared=store.getShare(
+          shareMatch[1]
+        );
+
+        if(!shared){
+          throw new PublicError(
+            404,
+            'This shared movie night could not be found.'
+          );
+        }
+
+        json(
+          res,
+          200,
+          {
+            ...shared,
+            shared:true,
+            shareId:shareMatch[1]
+          }
+        );
+
+        return;
+      }
+
       if(!process.env.TMDB_READ_TOKEN){
         throw new PublicError(
           503,
@@ -319,10 +358,20 @@ const server=http.createServer(async(req,res)=>{
 
         const input=await body(req);
 
+        const result=await pairingService.generate(input);
+
+        if(result.pairings?.length){
+          const shareId=store.createShare({
+            pairings:result.pairings
+          });
+
+          result.shareId=shareId;
+        }
+
         json(
           res,
           200,
-          await pairingService.generate(input)
+          result
         );
 
         return;

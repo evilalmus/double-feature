@@ -57,3 +57,31 @@
   color: var(--lime);
   font-weight: 600;
 }
+.result-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.share-button {
+  border: 1px solid #65734f;
+  background: #252d20;
+  color: var(--lime);
+  border-radius: 30px;
+  padding: 9px 14px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.share-button:hover {
+  background: #303a27;
+  border-color: var(--lime);
+}
+
+@media(max-width:650px) {
+  .result-actions {
+    justify-content: flex-start;
+  }
+}

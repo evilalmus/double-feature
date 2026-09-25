@@ -47,7 +47,34 @@
           <div class="feature-bottom"><span>2 FILMS</span><span>1 PERFECTLY PECULIAR NIGHT</span></div>
         </aside>
       </div>
-      <section id="results" class="results" aria-labelledby="results-title" hidden><div class="results-header"><div><p class="eyebrow" id="results-kicker">YOUR NEXT MOVIE NIGHT</p><h2 id="results-title" tabindex="-1">Double Feature Movie Pairings</h2><p id="results-summary"></p></div><span id="result-count" class="count-pill"></span></div><div id="result-cards"></div><p class="result-note">Connections are suggestions, not guarantees. Check age ratings before choosing your movie night.</p></section>
+    <section id="results" class="results" aria-labelledby="results-title" hidden>
+      <div class="results-header">
+        <div>
+          <p class="eyebrow" id="results-kicker">YOUR NEXT MOVIE NIGHT</p>
+          <h2 id="results-title" tabindex="-1">Double Feature Movie Pairings</h2>
+          <p id="results-summary"></p>
+        </div>
+    
+        <div class="result-actions">
+          <span id="result-count" class="count-pill"></span>
+    
+          <button
+            type="button"
+            id="share-results"
+            class="share-button"
+            hidden
+          >
+            Copy permalink
+          </button>
+        </div>
+      </div>
+    
+      <div id="result-cards"></div>
+    
+      <p class="result-note">
+        Connections are suggestions, not guarantees. Check age ratings before choosing your movie night.
+      </p>
+    </section>
     </main>
     <footer>
     <span class="footer-brand">
